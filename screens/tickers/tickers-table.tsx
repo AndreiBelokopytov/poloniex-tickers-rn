@@ -1,9 +1,18 @@
 import * as React from "react";
-import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { Ticker } from "../../models/ticker";
 
 interface TickersTableProps {
   tickers: Ticker[];
+  error: boolean;
+  isLoading?: boolean;
 }
 
 const cols = {
@@ -37,7 +46,21 @@ export class TickersTable extends React.Component<TickersTableProps> {
         {(cols as any)[key].title}
       </Text>
     ));
-    return <View style={[styles.row, styles.header]}>{cells}</View>;
+    return (
+      <>
+        <View style={[styles.row, styles.header]}>{cells}</View>
+        {this.rendererror()}
+      </>
+    );
+  };
+
+  rendererror = () => {
+    const { error } = this.props;
+    return error ? (
+      <View style={styles.error}>
+        <Text style={styles.errorText}>Ошибка</Text>
+      </View>
+    ) : null;
   };
 
   renderItem = ({ item }: { item: Ticker }) => {
@@ -58,19 +81,20 @@ export class TickersTable extends React.Component<TickersTableProps> {
 
   render() {
     const { tickers } = this.props;
-    return (
-
-        <ScrollView horizontal style={styles.root}>
-          <FlatList
-            contentContainerStyle={styles.table}
-            data={tickers}
-            ListHeaderComponent={this.renderHeader}
-            keyExtractor={this.tickerKeyExtractor}
-            renderItem={this.renderItem}
-            stickyHeaderIndices={[0]}
-          />
-        </ScrollView>
-
+    return this.props.isLoading ? (
+      <View style={styles.loadingRoot}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    ) : (
+      <ScrollView horizontal style={styles.root}>
+        <FlatList
+          data={tickers}
+          ListHeaderComponent={this.renderHeader}
+          keyExtractor={this.tickerKeyExtractor}
+          renderItem={this.renderItem}
+          stickyHeaderIndices={[0]}
+        />
+      </ScrollView>
     );
   }
 }
@@ -79,8 +103,10 @@ const styles = StyleSheet.create({
   root: {
     flex: 1
   },
-  table: {
-    paddingHorizontal: 12
+  loadingRoot: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
   },
   header: {
     backgroundColor: "white"
@@ -88,10 +114,19 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     paddingVertical: 12,
+    paddingHorizontal: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#9a9a9a"
   },
   cell: {
+    paddingHorizontal: 12
+  },
+  error: {
+    padding: 12,
+    backgroundColor: "red"
+  },
+  errorText: {
+    color: "white",
     paddingHorizontal: 12
   }
 });

@@ -4,8 +4,8 @@ import {
   NavigationScreenOptions,
   NavigationScreenProps
 } from "react-navigation";
-import { Observable, Subscription, timer } from "rxjs";
-import { flatMap } from "rxjs/operators";
+import { Observable, of, Subscription, timer } from "rxjs";
+import { catchError, flatMap, map } from "rxjs/operators";
 import { fromPromise } from "rxjs/internal-compatibility";
 import { Ticker } from "../../models/ticker";
 import { PoloniexApi } from "../../services/poloniex-api";
@@ -14,7 +14,7 @@ import { TickersTable } from "./tickers-table";
 interface TickersScreenProps {}
 interface TickersScreenState {
   tickers: Ticker[];
-  errorMessage: string | null;
+  error: string | null;
 }
 
 export class TickersScreen extends React.Component<
@@ -27,23 +27,40 @@ export class TickersScreen extends React.Component<
 
   state = {
     tickers: [],
-    errorMessage: null
+    error: null
   };
 
   subscription: Subscription | null = null;
 
-  private $tickersStream: Observable<Ticker[]> = timer(0, 5000).pipe(
-    flatMap(() => fromPromise(PoloniexApi.getTickers()))
+  private $tickersStream: Observable<{
+    tickers: Ticker[];
+    error: string | null;
+  }> = timer(0, 5000).pipe(
+    flatMap(() => fromPromise(PoloniexApi.getTickers())),
+    map(tickers => {
+      return {
+        tickers,
+        error: null
+      };
+    }),
+    catchError(err => {
+      return of({
+        tickers: [],
+        error: err.message
+      });
+    })
   );
 
   componentDidMount(): void {
-    this.subscription = this.$tickersStream.subscribe(
-      tickers => this.setState({ tickers, errorMessage: null }),
-      err =>
+    this.subscription = this.$tickersStream.subscribe(({ tickers, error }) => {
+      if (!error) {
+        this.setState({ tickers, error: null });
+      } else {
         this.setState({
-          errorMessage: err.message
-        })
-    );
+          error
+        });
+      }
+    });
   }
 
   componentWillUnmount(): void {
@@ -53,9 +70,14 @@ export class TickersScreen extends React.Component<
   }
 
   render() {
+    const { error, tickers } = this.state;
     return (
       <View style={styles.root}>
-        <TickersTable tickers={this.state.tickers} />
+        <TickersTable
+          tickers={tickers}
+          error={!!error}
+          isLoading={tickers.length === 0}
+        />
       </View>
     );
   }
