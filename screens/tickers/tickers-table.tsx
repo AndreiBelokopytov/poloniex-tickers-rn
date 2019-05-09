@@ -8,6 +8,8 @@ import {
   View
 } from "react-native";
 import { Ticker } from "../../models/ticker";
+import { TickersTableCell } from "./tickers-table-cell";
+import { TickersTableRow } from "./tickers-table-row";
 
 interface TickersTableProps {
   tickers: Ticker[];
@@ -18,19 +20,19 @@ interface TickersTableProps {
 const cols = {
   name: {
     title: "Тикер",
-    width: 120
+    width: 140
   },
   last: {
     title: "last",
-    width: 120
+    width: 140
   },
   highestBid: {
     title: "highestBid",
-    width: 120
+    width: 140
   },
   percentChange: {
     title: "percentChange",
-    width: 120
+    width: 140
   }
 };
 
@@ -39,16 +41,15 @@ export class TickersTable extends React.Component<TickersTableProps> {
 
   renderHeader = () => {
     const cells = Object.keys(cols).map((key, index) => (
-      <Text
-        style={[{ width: (cols as any)[key].width }, styles.cell]}
+      <TickersTableCell
         key={index}
-      >
-        {(cols as any)[key].title}
-      </Text>
+        width={(cols as any)[key].width}
+        text={(cols as any)[key].title}
+      />
     ));
     return (
       <>
-        <View style={[styles.row, styles.header]}>{cells}</View>
+        <TickersTableRow header>{cells}</TickersTableRow>
         {this.rendererror()}
       </>
     );
@@ -65,18 +66,13 @@ export class TickersTable extends React.Component<TickersTableProps> {
 
   renderItem = ({ item }: { item: Ticker }) => {
     const cells = Object.keys(cols).map((key, index) => (
-      <Text
-        style={[{ width: (cols as any)[key].width }, styles.cell]}
+      <TickersTableCell
         key={index}
-      >
-        {(item as any)[key]}
-      </Text>
+        width={(cols as any)[key].width}
+        text={(item as any)[key]}
+      />
     ));
-    return (
-      <View key={item.id} style={styles.row}>
-        {cells}
-      </View>
-    );
+    return <TickersTableRow key={item.id}>{cells}</TickersTableRow>;
   };
 
   render() {
@@ -107,19 +103,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center"
-  },
-  header: {
-    backgroundColor: "white"
-  },
-  row: {
-    flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#9a9a9a"
-  },
-  cell: {
-    paddingHorizontal: 12
   },
   error: {
     padding: 12,
