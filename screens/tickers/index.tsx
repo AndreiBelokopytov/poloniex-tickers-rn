@@ -5,7 +5,7 @@ import {
   NavigationScreenProps
 } from "react-navigation";
 import { Observable, of, Subscription, timer } from "rxjs";
-import { catchError, flatMap, map } from "rxjs/operators";
+import {catchError, flatMap, map, switchMap, timeout} from "rxjs/operators";
 import { fromPromise } from "rxjs/internal-compatibility";
 import { Ticker } from "../../models/ticker";
 import { PoloniexApi } from "../../services/poloniex-api";
@@ -39,7 +39,9 @@ export class TickersScreen extends React.Component<
     error: string | null;
   }> = timer(0, TIMEOUT).pipe(
     flatMap(() =>
-      fromPromise(PoloniexApi.getTickers(TIMEOUT)).pipe(
+      fromPromise(PoloniexApi.getTickers()).pipe(
+        timeout(TIMEOUT)
+      ).pipe(
         map(tickers => {
           return {
             tickers,

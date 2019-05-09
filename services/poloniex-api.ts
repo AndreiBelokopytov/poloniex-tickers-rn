@@ -1,22 +1,12 @@
 import { Ticker } from "../models/ticker";
 
 export class PoloniexApi {
-  private static fetchWithTimout(url: string, timeout: number) {
-    return Promise.race([
-      new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error("API timeout error")), timeout);
-      }),
-      fetch(url)
-    ]);
-  }
-  static async getTickers(timout: number): Promise<Ticker[]> {
+  static async getTickers(): Promise<Ticker[]> {
     let data = [];
     try {
-      const response = await this.fetchWithTimout(
-        "https://poloniex.com/public?command=returnTicker",
-        timout
+      const response = await fetch(
+        "https://poloniex.com/public?command=returnTicker"
       );
-      // @ts-ignore
       data = await response.json();
     } catch (e) {
       console.log(e);
