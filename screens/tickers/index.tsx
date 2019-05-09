@@ -11,6 +11,8 @@ import { Ticker } from "../../models/ticker";
 import { PoloniexApi } from "../../services/poloniex-api";
 import { TickersTable } from "./tickers-table";
 
+const TIMEOUT = 5000;
+
 interface TickersScreenProps {}
 interface TickersScreenState {
   tickers: Ticker[];
@@ -35,20 +37,23 @@ export class TickersScreen extends React.Component<
   private $tickersStream: Observable<{
     tickers: Ticker[];
     error: string | null;
-  }> = timer(0, 5000).pipe(
-    flatMap(() => fromPromise(PoloniexApi.getTickers())),
-    map(tickers => {
-      return {
-        tickers,
-        error: null
-      };
-    }),
-    catchError(err => {
-      return of({
-        tickers: [],
-        error: err.message
-      });
-    })
+  }> = timer(0, TIMEOUT).pipe(
+    flatMap(() =>
+      fromPromise(PoloniexApi.getTickers(TIMEOUT)).pipe(
+        map(tickers => {
+          return {
+            tickers,
+            error: null
+          };
+        }),
+        catchError(err => {
+          return of({
+            tickers: [],
+            error: err.message
+          });
+        })
+      )
+    )
   );
 
   componentDidMount(): void {
